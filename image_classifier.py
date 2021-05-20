@@ -1,8 +1,6 @@
 # Imports here
-'''%matplotlib inline'''
-'''%config InlineBackend.figure_format = 'retina' '''
-
 import matplotlib.pyplot as plt
+import os
 
 import torch
 from torch import nn
@@ -16,7 +14,13 @@ import PIL
 from PIL import Image
 
 # Use GPU if it's available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def check_device(device):
+    if torch.cuda.is_available() and device == 'gpu':
+        device=torch.device("cuda")
+    else:
+        device=torch.device("cpu")
+    return device
+
 
 
 def transform_images(data_dir):
@@ -58,7 +62,7 @@ def transform_images(data_dir):
     return train_data,test_data, valid_data, trainloader, testloader, validloader
 
 
-def network_model(structure='vgg13',dropout=0.5, hidden_layer1 = 4096,learning_rate = 0.0001):
+def network_model(structure='vgg13',dropout=0.5, hidden_layer1 = 4096,learning_rate = 0.0001, device="cuda"):
     # TODO: Build and train your network
     if structure =='vgg13':
         model = models.vgg13(pretrained=True)
@@ -84,7 +88,7 @@ def network_model(structure='vgg13',dropout=0.5, hidden_layer1 = 4096,learning_r
     return model, criterion, optimizer
 
 
-def deep_learning(model, criterion, optimizer, epochs=2, print_every = 5, trainloader=0, validloader=0):
+def deep_learning(model, criterion, optimizer, epochs=2, print_every = 5, trainloader=0, validloader=0, device="cuda"):
     
     steps = 0
     running_loss = 0
@@ -129,8 +133,7 @@ def deep_learning(model, criterion, optimizer, epochs=2, print_every = 5, trainl
                 model.train()
 
 
-def save_checkpoint(train_data=0,model=0,path='checkpoint.pth',structure ='vgg13', hidden_layer1 = 4096,dropout=0.5,learning_rate=0.0001,epochs=2):
-
+def save_checkpoint(train_data=0, model=0,path='checkpoint.pth',structure ='vgg13', hidden_layer1 = 4096,dropout=0.5,learning_rate=0.0001,epochs=2):
     checkpoint = {'structure' :structure,
                   'hidden_layer1':hidden_layer1,
                   'dropout':dropout,
@@ -138,10 +141,18 @@ def save_checkpoint(train_data=0,model=0,path='checkpoint.pth',structure ='vgg13
                   'state_dict': model.state_dict(),
                   'classifier': model.classifier,
                   'learning_rate': learning_rate,
-                  'class_to_idx': train_data.class_to_idx,
-                  'optimizer_dict': optimizer.state_dict()}
-    torch.save(checkpoint, path)
+                  'class_to_idx': train_data.class_to_idx}
+    file_name = 'checkpoint.pth'
+    torch.save(checkpoint, path+file_name)
 
+def create_dir(path):
+    if os.path.exists(path):
+        print("Saving trained model in the base location")
+    else:
+        os.mkdir(path)
+        path = "./"+path+"/"
+        print("New folder created")
+    return path
 
 def load_checkpoint(filepath):
     checkpoint = torch.load(filepath)
@@ -187,4 +198,12 @@ def predict(image_path, model, topk=5):
         
     return probs, classes
 
-
+def select_file_name(inputpath):
+    if not len(os.listdir(inputpath))==1:
+        print("Please add only one image to predict")
+    else:
+        filelist = os.listdir(inputpath)
+        filename = filelist[0]
+        finalpath = inputpath+"/"+filename
+        return finalpath
+    

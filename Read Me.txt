@@ -1,0 +1,7 @@
+Dear Mentor/Reviewer,
+Please note the below points on the two parts of the project.
+Image Classifier Part 1:
+All files are running as expected
+Image Classifier Part 2:
+For the predict functionality i found out that path to call had to be ammended from /path/to/image to path/to/image since the location could not be identified
+Rest is working as expected
